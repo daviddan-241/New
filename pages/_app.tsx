@@ -1,35 +1,12 @@
 import type { AppProps } from 'next/app';
 import NextHead from 'next/head';
 import '../styles/globals.css';
+import '../src/appkit-config';
 
 import { WagmiProvider } from 'wagmi';
-import { getDefaultConfig, RainbowKitProvider } from '@rainbow-me/rainbowkit';
-import '@rainbow-me/rainbowkit/styles.css';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { GeistProvider, CssBaseline } from '@geist-ui/core';
-
-import { arbitrum, bsc, gnosis, mainnet, optimism, polygon } from 'viem/chains';
-import { http } from 'viem';
-import { z } from 'zod';
+import { wagmiAdapter } from '../src/appkit-config';
 import { useIsMounted } from '../hooks';
-
-const walletConnectProjectId = z
-  .string()
-  .parse(process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID);
-
-const wagmiConfig = getDefaultConfig({
-  appName: 'Payment',
-  projectId: walletConnectProjectId,
-  chains: [mainnet, polygon, optimism, arbitrum, bsc, gnosis],
-  transports: {
-    [mainnet.id]: http(),
-    [polygon.id]: http(),
-    [optimism.id]: http(),
-    [arbitrum.id]: http(),
-    [bsc.id]: http(),
-    [gnosis.id]: http(),
-  },
-});
 
 const queryClient = new QueryClient();
 
@@ -37,23 +14,16 @@ const App = ({ Component, pageProps }: AppProps) => {
   const isMounted = useIsMounted();
   if (!isMounted) return null;
   return (
-    <>
-      <WagmiProvider config={wagmiConfig}>
-        <QueryClientProvider client={queryClient}>
-          <RainbowKitProvider>
-            <NextHead>
-              <title>Pay</title>
-              <meta name="description" content="Crypto payment" />
-              <link rel="icon" href="/favicon.ico" />
-            </NextHead>
-            <GeistProvider>
-              <CssBaseline />
-              <Component {...pageProps} />
-            </GeistProvider>
-          </RainbowKitProvider>
-        </QueryClientProvider>
-      </WagmiProvider>
-    </>
+    <WagmiProvider config={wagmiAdapter.wagmiConfig}>
+      <QueryClientProvider client={queryClient}>
+        <NextHead>
+          <title>Pay</title>
+          <meta name="description" content="Crypto payment" />
+          <link rel="icon" href="/favicon.ico" />
+        </NextHead>
+        <Component {...pageProps} />
+      </QueryClientProvider>
+    </WagmiProvider>
   );
 };
 
