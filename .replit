@@ -38,3 +38,7 @@ externalPort = 80
 
 [userenv.shared]
 NEXT_PUBLIC_ACCESS_CODE = "1234"
+
+[postMerge]
+path = "scripts/post-merge.sh"
+timeoutMs = 120000
