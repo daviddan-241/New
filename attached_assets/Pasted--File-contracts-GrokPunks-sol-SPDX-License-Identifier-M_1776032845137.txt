@@ -1,0 +1,164 @@
+// File: contracts/GrokPunks.sol
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.24;
+
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/security/Pausable.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
+import "@openzeppelin/contracts/utils/Strings.sol";
+import "erc721a/contracts/ERC721A.sol";
+import "@openzeppelin/contracts/interfaces/IERC2981.sol";
+
+contract GrokPunks is ERC721A, Ownable, Pausable, ReentrancyGuard, IERC2981 {
+    using Strings for uint256;
+
+    uint256 public maxSupply = 10000;
+    uint256 public mintPrice = 0.005 ether; // low fee for accessibility
+    uint256 public maxPerWallet = 10;
+    uint256 public maxPerTx = 5;
+    bool public revealed = false;
+    string public hiddenURI = "ipfs://QmHiddenMetadataHash/";
+    string public baseURI = "";
+    bytes32 public merkleRoot;
+    uint256 public totalMinted;
+    mapping(address => uint256) public walletMints;
+    mapping(address => uint256) public whitelistMints;
+
+    // Phases for advanced minting
+    enum Phase { Inactive, Whitelist, Presale, Public }
+    Phase public currentPhase = Phase.Inactive;
+
+    constructor() ERC721A("GrokPunks", "GP") {
+        _setDefaultRoyalty(msg.sender, 750); // 7.5% creator royalty (EIP-2981)
+    }
+
+    // Public mint
+    function publicMint(uint256 quantity) external payable whenNotPaused nonReentrant {
+        require(currentPhase == Phase.Public, "Public mint not active");
+        require(quantity > 0 && quantity <= maxPerTx, "Invalid quantity");
+        require(totalSupply() + quantity <= maxSupply, "Exceeds max supply");
+        require(msg.value >= mintPrice * quantity, "Insufficient funds");
+        require(walletMints[msg.sender] + quantity <= maxPerWallet, "Exceeds wallet limit");
+
+        walletMints[msg.sender] += quantity;
+        totalMinted += quantity;
+        _safeMint(msg.sender, quantity);
+    }
+
+    // Whitelist mint (Merkle proof)
+    function whitelistMint(uint256 quantity, bytes32[] calldata proof) external payable whenNotPaused nonReentrant {
+        require(currentPhase == Phase.Whitelist, "Whitelist mint not active");
+        require(MerkleProof.verify(proof, merkleRoot, keccak256(abi.encodePacked(msg.sender))), "Not whitelisted");
+        require(quantity > 0 && quantity <= maxPerTx, "Invalid quantity");
+        require(totalSupply() + quantity <= maxSupply, "Exceeds max supply");
+        require(msg.value >= mintPrice * quantity, "Insufficient funds");
+        require(whitelistMints[msg.sender] + quantity <= 3, "Exceeds whitelist limit");
+
+        whitelistMints[msg.sender] += quantity;
+        walletMints[msg.sender] += quantity;
+        totalMinted += quantity;
+        _safeMint(msg.sender, quantity);
+    }
+
+    // Presale mint (for early supporters)
+    function presaleMint(uint256 quantity) external payable whenNotPaused nonReentrant {
+        require(currentPhase == Phase.Presale, "Presale not active");
+        require(quantity > 0 && quantity <= maxPerTx, "Invalid quantity");
+        require(totalSupply() + quantity <= maxSupply, "Exceeds max supply");
+        require(msg.value >= mintPrice * quantity, "Insufficient funds");
+        require(walletMints[msg.sender] + quantity <= maxPerWallet, "Exceeds wallet limit");
+
+        walletMints[msg.sender] += quantity;
+        totalMinted += quantity;
+        _safeMint(msg.sender, quantity);
+    }
+
+    // Airdrop to multiple addresses
+    function airdrop(address[] calldata recipients, uint256[] calldata quantities) external onlyOwner {
+        require(recipients.length == quantities.length, "Array length mismatch");
+        for (uint256 i = 0; i < recipients.length; i++) {
+            require(totalSupply() + quantities[i] <= maxSupply, "Exceeds max supply");
+            totalMinted += quantities[i];
+            _safeMint(recipients[i], quantities[i]);
+        }
+    }
+
+    // Team mint (reserved)
+    function teamMint(uint256 quantity) external onlyOwner {
+        require(totalSupply() + quantity <= maxSupply, "Exceeds max supply");
+        totalMinted += quantity;
+        _safeMint(owner(), quantity);
+    }
+
+    // Reveal metadata (standard for hype collections)
+    function revealCollection() external onlyOwner {
+        revealed = true;
+    }
+
+    // Set phases
+    function setPhase(Phase _phase) external onlyOwner {
+        currentPhase = _phase;
+    }
+
+    // Admin controls
+    function setMerkleRoot(bytes32 _merkleRoot) external onlyOwner {
+        merkleRoot = _merkleRoot;
+    }
+
+    function setMintPrice(uint256 _newPrice) external onlyOwner {
+        mintPrice = _newPrice;
+    }
+
+    function setMaxSupply(uint256 _newMaxSupply) external onlyOwner {
+        require(_newMaxSupply >= totalSupply(), "Cannot be lower than current supply");
+        maxSupply = _newMaxSupply;
+    }
+
+    function setMaxPerWallet(uint256 _newMax) external onlyOwner {
+        maxPerWallet = _newMax;
+    }
+
+    function setMaxPerTx(uint256 _newMax) external onlyOwner {
+        maxPerTx = _newMax;
+    }
+
+    function setBaseURI(string memory _newBaseURI) external onlyOwner {
+        baseURI = _newBaseURI;
+    }
+
+    function setHiddenURI(string memory _newHiddenURI) external onlyOwner {
+        hiddenURI = _newHiddenURI;
+    }
+
+    function pause() external onlyOwner {
+        _pause();
+    }
+
+    function unpause() external onlyOwner {
+        _unpause();
+    }
+
+    // Withdraw all funds
+    function withdraw() external onlyOwner {
+        payable(owner()).transfer(address(this).balance);
+    }
+
+    // Token URI with reveal logic + IPFS support
+    function tokenURI(uint256 tokenId) public view override returns (string memory) {
+        require(_exists(tokenId), "URI query for nonexistent token");
+        if (!revealed) {
+            return string(abi.encodePacked(hiddenURI, tokenId.toString(), ".json"));
+        }
+        return string(abi.encodePacked(baseURI, tokenId.toString(), ".json"));
+    }
+
+    // Royalty support (OpenSea, Blur, etc. compliant)
+    function royaltyInfo(uint256, uint256 salePrice) public view override returns (address, uint256) {
+        return (owner(), (salePrice * 750) / 10000); // 7.5%
+    }
+
+    function supportsInterface(bytes4 interfaceId) public view override(ERC721A, IERC165) returns (bool) {
+        return interfaceId == type(IERC2981).interfaceId || super.supportsInterface(interfaceId);
+    }
+}

