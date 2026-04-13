@@ -17,8 +17,11 @@ const App = ({ Component, pageProps }: AppProps) => {
     <WagmiProvider config={wagmiAdapter.wagmiConfig}>
       <QueryClientProvider client={queryClient}>
         <NextHead>
-          <title>Pay</title>
-          <meta name="description" content="Crypto payment" />
+          <title>APEX Genesis — NFT + Token Mint</title>
+          <meta name="description" content="Mint APEX Genesis passes — NFTs bundled with exclusive $APEX tokens. Limited 8,888 supply across ETH and Solana." />
+          <meta name="viewport" content="width=device-width, initial-scale=1" />
+          <meta property="og:title" content="APEX Genesis Mint" />
+          <meta property="og:description" content="8,888 unique NFT passes with token bundles. Live mint on ETH + Solana." />
           <link rel="icon" href="/favicon.ico" />
         </NextHead>
         <Component {...pageProps} />

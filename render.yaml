@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: apex-nft-mint
+    env: node
+    region: oregon
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm run start
+    envVars:
+      - key: NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID
+        sync: false
+      - key: MORALIS_API_KEY
+        sync: false
+      - key: NODE_ENV
+        value: production
