@@ -1,26 +1,55 @@
+import { createAppKit } from '@reown/appkit/react';
 import { WagmiAdapter } from '@reown/appkit-adapter-wagmi';
-import { mainnet, polygon, bsc, arbitrum, optimism, base } from '@reown/appkit/networks';
-import { createAppKit } from '@reown/appkit';
+import { SolanaAdapter } from '@reown/appkit-adapter-solana/react';
+import {
+  mainnet,
+  polygon,
+  optimism,
+  arbitrum,
+  bsc,
+  gnosis,
+  solana,
+} from '@reown/appkit/networks';
+const projectId = process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID!;
 
-const projectId =
-  process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID || 'placeholder-project-id';
-
-const networks = [mainnet, polygon, bsc, arbitrum, optimism, base] as const;
+export const networks = [
+  mainnet,
+  polygon,
+  optimism,
+  arbitrum,
+  bsc,
+  gnosis,
+  solana,
+] as const;
 
 export const wagmiAdapter = new WagmiAdapter({
   networks,
   projectId,
-  ssr: false,
 });
 
+const solanaAdapter = new SolanaAdapter({ wallets: [] });
+
 createAppKit({
-  adapters: [wagmiAdapter],
+  adapters: [wagmiAdapter, solanaAdapter],
   networks,
   projectId,
+  metadata: {
+    name: 'APEX Genesis',
+    description: 'Mint your APEX Genesis pass — 8,888 unique cross-chain NFTs',
+    url:
+      typeof window !== 'undefined'
+        ? window.location.origin
+        : 'https://apexgenesis.xyz',
+    icons: ['/favicon.ico'],
+  },
   features: {
     analytics: false,
     email: false,
-    socials: false,
+    socials: [],
   },
   themeMode: 'dark',
+  themeVariables: {
+    '--w3m-accent': '#7c3aed',
+    '--w3m-border-radius-master': '14px',
+  },
 });
